@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('taxonomies', function (Blueprint $table) {
+            $table->id();
+            $table->xForeignId('parent_id')
+                ->nullable()
+                ->constrained($table->getTable())
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
+            $table->string('name');
+            $table->string('slug');
+            $table->json('meta')->nullable();
+            $table->text('description')->nullable();
+            $table->string('font_icon')->nullable();
+            $table->string('type', 100)->nullable();
+            $table->integer('weight')->default(1);
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('taxonomies');
+    }
+};

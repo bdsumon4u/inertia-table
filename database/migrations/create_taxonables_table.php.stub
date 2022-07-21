@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('taxonables', function (Blueprint $table) {
+            $table->id();
+            $table->xForeignIdFor(config('taxonable.model'))
+                ->nullable()
+                ->constrained($table->getTable())
+                ->cascadeOnDelete()
+                ->cascadeOnUpdate();
+            $table->nullableMorphs('taxonable');
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('taxonables');
+    }
+};

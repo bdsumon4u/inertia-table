@@ -1,0 +1,75 @@
+{
+    "name": "hotash/inertia-table",
+    "description": "A package for Laravel Inertia table.",
+    "keywords": [
+        "hotash",
+        "laravel",
+        "inertia-table"
+    ],
+    "homepage": "https://github.com/hotash/inertia-table",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sumon Ahmed",
+            "email": "bdsumon4u@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "hotash/laravel-x-foreign": "^1.0",
+        "http-interop/http-factory-guzzle": "^1.0",
+        "illuminate/contracts": "^9.0",
+        "inertiajs/inertia-laravel": "^0.5.2",
+        "laravel/scout": "^9.4",
+        "meilisearch/meilisearch-php": "^0.24",
+        "spatie/laravel-package-tools": "^1.9.2",
+        "spatie/laravel-query-builder": "^5.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "nunomaduro/collision": "^6.0",
+        "nunomaduro/larastan": "^2.0.1",
+        "orchestra/testbench": "^7.0",
+        "pestphp/pest": "^1.21",
+        "pestphp/pest-plugin-laravel": "^1.1",
+        "phpstan/extension-installer": "^1.1",
+        "phpstan/phpstan-deprecation-rules": "^1.0",
+        "phpstan/phpstan-phpunit": "^1.0",
+        "phpunit/phpunit": "^9.5",
+        "spatie/laravel-ray": "^1.26"
+    },
+    "autoload": {
+        "psr-4": {
+            "Hotash\\InertiaTable\\": "src",
+            "Hotash\\InertiaTable\\Database\\Factories\\": "database/factories"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Hotash\\InertiaTable\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Hotash\\InertiaTable\\TableServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
