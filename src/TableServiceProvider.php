@@ -21,11 +21,15 @@ class TableServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
-        Response::macro('getTableProps', function () {
-            return $this->props['queryBuilderProps'] ?? [];
-        });
+        Response::macro('withTable', function (mixed $withTableBuilder) {
+            if (! is_subclass_of($withTableBuilder, TableBuilder::class)) {
+                return $this;
+            }
 
-        Response::macro('withTable', function (TableBuilder $withTableBuilder) {
+            if (! $withTableBuilder instanceof TableBuilder) {
+                $withTableBuilder = new $withTableBuilder;
+            }
+
             return $withTableBuilder->render($this);
         });
     }

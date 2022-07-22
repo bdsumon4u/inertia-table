@@ -2,7 +2,6 @@
 
 namespace Hotash\InertiaTable;
 
-use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Arr;
@@ -19,7 +18,9 @@ abstract class TableBuilder
     protected string $model;
 
     private Request $request;
-
+    private string $pageName = 'page';
+    private string $defaultSort = 'id';
+    private Collection $fields;
     private Collection $columns;
 
     private Collection $searchFields;
@@ -28,27 +29,33 @@ abstract class TableBuilder
     protected array $allowedSorts = [];
     protected array $allowedFilters = [];
 
-    private bool $globalSearch = true;
-
-    protected static string $prefix = '_table';
-
-    protected array $perPageOptions = [10, 20, 30, 50];
     protected array $pageLength = [10, 20, 30, 50];
 
     private static bool|string $defaultGlobalSearch = false;
 
     private static array $defaultQueryBuilderConfig = [];
+    private static array $customQueryBuilderConfig = [];
 
-    public function __construct(private string $name = 'default', private string $pageName = 'page', private string $defaultSort = 'name')
+    public function __construct(private string $name = 'default')
     {
-        $this->request = \request();
-        $this->columns = new Collection;
-        $this->searchFields = new Collection;
-        $this->filters = new Collection;
+        $this->request = request();
+        $this->fields = collect();
+        $this->columns = collect();
+        $this->searchFields = collect();
+        $this->filters = collect();
+
+        if ($this->name !== 'default') {
+            $this->name($this->name);
+        }
 
         if (static::$defaultGlobalSearch !== false) {
             $this->withGlobalSearch(static::$defaultGlobalSearch);
         }
+    }
+
+    public static function make(string $name = 'default'): static
+    {
+        return new static(...func_get_args());
     }
 
     abstract protected function buildTable(): void;
@@ -75,7 +82,7 @@ abstract class TableBuilder
      */
     private function query(string $key, mixed $default = null): mixed
     {
-        if ($key !== 'default') {
+        if ($this->name !== 'default') {
             $key = "{$this->name}_{$key}";
         }
 
@@ -110,6 +117,7 @@ abstract class TableBuilder
     public function name(string $name): self
     {
         $this->name = $name;
+        $this->pageName($name.'_page');
 
         return $this;
     }
@@ -130,12 +138,12 @@ abstract class TableBuilder
     /**
      * PerPage options for this table.
      *
-     * @param array $perPageOptions
+     * @param array $pageLength
      * @return self
      */
-    public function perPageOptions(array $perPageOptions): self
+    public function pageLength(array $pageLength): self
     {
-        $this->perPageOptions = $perPageOptions;
+        $this->pageLength = $pageLength;
 
         return $this;
     }
@@ -158,7 +166,7 @@ abstract class TableBuilder
      */
     private function perPage(): mixed
     {
-        return $this->request->input('per_page', Arr::first($this->pageLength));
+        return $this->query('per_page', Arr::first($this->pageLength));
     }
 
     /**
@@ -182,29 +190,21 @@ abstract class TableBuilder
     protected function getQueryBuilderProps(): array
     {
         return [
-            'defaultVisibleToggleableColumns' => $this->columns->reject->hidden->map->key->sort()->values(),
+            'defaultVisibleToggleableColumns' => $this->columns->filter->canBeHidden->reject->hidden->keys()->sort()->values(),
             'columns' => $this->transformColumns(),
-            'hasHiddenColumns' => $this->columns->filter->hidden->isNotEmpty(),
-            'hasToggleableColumns' => $this->columns->filter->canBeHidden->isNotEmpty(),
 
             'filters' => $this->transformFilters(),
             'hasFilters' => $this->filters->isNotEmpty(),
-            'isFiltered' => $this->filters->search(fn($filter) => $filter->value),
+            'isFiltered' => !!$this->filters->search(fn($filter) => $filter->value),
 
-            'searchFields' => $searchFields = $this->transformsearchFields(),
-            'searchFieldsWithoutGlobal' => $searchFieldsWithoutGlobal = $searchFields->where('key', '!=', 'global'),
-            'hasSearchFields' => $searchFieldsWithoutGlobal->isNotEmpty(),
-            'hasSearchFieldsWithValue' => $searchFieldsWithoutGlobal->whereNotNull('value')->isNotEmpty(),
-            'hasSearchFieldsWithoutValue' => $searchFieldsWithoutGlobal->whereNull('value')->isNotEmpty(),
+            'searchFields' => $this->transformsearchFields(),
 
-            'globalSearch' => $this->searchFields->firstWhere('key', 'global'),
-
-            'cursor' => $this->query('cursor'),
             'sort' => $this->query('sort', $this->defaultSort) ?: null,
             'defaultSort' => $this->defaultSort,
             'page' => Paginator::resolveCurrentPage($this->pageName),
             'pageName' => $this->pageName,
-            'perPageOptions' => $this->perPageOptions,
+            'per_page' => $this->perPage(),
+            'pageLength' => $this->pageLength,
         ];
     }
 
@@ -379,26 +379,6 @@ abstract class TableBuilder
         return $this;
     }
 
-    /**
-     * Register route for DataTable.
-     *
-     * @param $table
-     * @return void
-     */
-    public static function route($table)
-    {
-        if (!is_array($table)) {
-            $table = [$table];
-        }
-
-        Route::prefix(static::$prefix)
-            ->group(function () use ($table) {
-                foreach ($table as $class) {
-                    Route::post(Str::kebab(class_basename($class)), $class);
-                }
-            });
-    }
-
     public function getTableProps(): array
     {
         $this->buildTable();
@@ -406,12 +386,15 @@ abstract class TableBuilder
         $this->allowedFilters();
 
         return array_merge($this->getQueryBuilderProps(), [
-            'resource' => fn () => $this->buildQuery(QueryBuilder::for($this->model))
+            'resource' => $this->buildQuery(QueryBuilder::for($this->model))
                 ->defaultSort($this->defaultSort)
                 ->allowedSorts($this->allowedSorts)
                 ->allowedFilters($this->allowedFilters)
                 ->allowedFields($this->allowedFields())
-                ->paginate($this->perPage())
+                ->paginate(
+                    perPage: $this->perPage(),
+                    pageName: $this->pageName,
+                )
                 ->withQueryString(),
         ]);
     }
@@ -431,26 +414,18 @@ abstract class TableBuilder
             return;
         }
 
-        $this->allowedFilters = array_merge(
-            $this->filters->pluck('key')->toArray(),
-            $this->searchFields->pluck('key')->toArray(),
-            [AllowedFilter::callback('global', function ($query, $value) {
-                if (class_uses($this->model, Searchable::class)) {
-                    return $query;
-                }
-
-                $query->whereIn(
-                    (new $this->model)->getKeyName(),
-                    $this->model::search($value)->keys()
-                );
-            })]
-        );
+        $this->allowedFilters = $this->filters->merge($this->searchFields)->map(function ($column, $key) {
+            if ($key !== 'global') {
+                return $key;
+            }
+            return $this->globalSearch();
+        })->values()->toArray();
     }
 
     public function globalSearch(): AllowedFilter
     {
         return AllowedFilter::callback('global', function ($query, $value) {
-            if (class_uses($this->model, Searchable::class)) {
+            if (! class_uses($this->model, Searchable::class)) {
                 return $query;
             }
 
@@ -466,6 +441,30 @@ abstract class TableBuilder
         return [];
     }
 
+    private function getQueryBuilderParameters()
+    {
+        if ($this->name === 'default') {
+            return static::$defaultQueryBuilderConfig;
+        }
+
+        if (! isset(static::$customQueryBuilderConfig[$this->name])) {
+            static::$customQueryBuilderConfig[$this->name] = collect(static::$defaultQueryBuilderConfig)->map(function ($value) {
+                return "{$this->name}_{$value}";
+            })->all();
+        }
+
+        return static::$customQueryBuilderConfig[$this->name];
+    }
+
+    private function resetQueryBuilderParameters(): void
+    {
+        if (empty(static::$defaultQueryBuilderConfig)) {
+            static::$defaultQueryBuilderConfig = config('query-builder.parameters');
+        }
+
+        config(['query-builder.parameters' => $this->getQueryBuilderParameters()]);
+    }
+
     /**
      * Give the query builder props to the given Inertia response.
      *
@@ -474,8 +473,8 @@ abstract class TableBuilder
      */
     public function render(Response $response): Response
     {
-        return $response->with(['queryBuilderProps' => array_merge(call_user_func([$response, 'getTableProps']), [
-            $this->name => $this->getTableProps(),
-        ])]);
+        $this->resetQueryBuilderParameters();
+
+        return $response->with([$this->name.'TableBuilderProps' => $this->getTableProps()]);
     }
 }
