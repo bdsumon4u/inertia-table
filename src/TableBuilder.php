@@ -190,7 +190,7 @@ abstract class TableBuilder
     protected function getQueryBuilderProps(): array
     {
         return [
-            'defaultVisibleToggleableColumns' => $this->columns->filter->canBeHidden->reject->hidden->keys()->sort()->values(),
+            'defaultVisibleToggleableColumns' => $this->columns->reject->hidden->pluck('key')->sort()->values(),
             'columns' => $this->transformColumns(),
 
             'filters' => $this->transformFilters(),
@@ -263,12 +263,12 @@ abstract class TableBuilder
      *
      * @return \Illuminate\Support\Collection
      */
-    protected function transformsearchFields(): Collection
+    protected function transformSearchFields(): Collection
     {
         $filters = $this->query('filter', []);
 
         if (empty($filters)) {
-            return $this->searchFields;
+            return $this->searchFields->except($this->filters->pluck('key'));
         }
 
         return $this->searchFields->map(function (SearchField $searchField) use ($filters) {
@@ -277,7 +277,7 @@ abstract class TableBuilder
             }
 
             return $searchField;
-        });
+        })->except($this->filters->pluck('key'));
     }
 
     /**
@@ -296,14 +296,14 @@ abstract class TableBuilder
         $key = $key ?: Str::kebab($label);
         $label = $label ?: Str::headline($key);
 
-        $this->columns[$key] = new Column(
+        $this->columns->push(new Column(
             key: $key,
             label: $label,
             canBeHidden: $canBeHidden,
             hidden: $hidden,
             sortable: $sortable,
             sorted: false
-        );
+        ));
 
         if ($searchable) {
             $this->searchField($key, $label);
@@ -395,6 +395,11 @@ abstract class TableBuilder
                     perPage: $this->perPage(),
                     pageName: $this->pageName,
                 )
+                ->through(function ($model, $key) {
+                    $data = Arr::dot($model->toArray());
+                    $data['created_at'] = $model->created_at->format('d-M-Y');
+                    return $data;
+                })
                 ->withQueryString(),
         ]);
     }
