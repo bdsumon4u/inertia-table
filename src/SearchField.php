@@ -1,6 +1,7 @@
 <?php
 
 namespace Hotash\InertiaTable;
+
 use Illuminate\Contracts\Support\Arrayable;
 
 class SearchField implements Arrayable
@@ -15,7 +16,7 @@ class SearchField implements Arrayable
     public function toArray()
     {
         return [
-            'key'   => $this->key,
+            'key' => $this->key,
             'label' => $this->label,
             'value' => $this->value,
         ];

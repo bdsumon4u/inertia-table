@@ -38,8 +38,8 @@ trait HasTableBuilder
         return $this->columns->map(function (Column $column) use ($columns, $sort) {
             $key = $column->key;
 
-            if (!empty($columns)) {
-                $column->hidden = !in_array($key, $columns);
+            if (! empty($columns)) {
+                $column->hidden = ! in_array($key, $columns);
             }
 
             if ($sort === $key) {
@@ -154,5 +154,4 @@ trait HasTableBuilder
                 ->withQueryString(),
         ]);
     }
-
 }

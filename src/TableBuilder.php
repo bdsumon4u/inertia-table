@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Inertia\Response;
 use Laravel\Scout\Searchable;
@@ -18,15 +17,21 @@ abstract class TableBuilder
     protected string $model;
 
     private Request $request;
+
     private string $pageName = 'page';
+
     private string $defaultSort = 'id';
+
     private Collection $fields;
+
     private Collection $columns;
 
     private Collection $searchFields;
 
     private Collection $filters;
+
     protected array $allowedSorts = [];
+
     protected array $allowedFilters = [];
 
     protected array $pageLength = [10, 20, 30, 50];
@@ -34,6 +39,7 @@ abstract class TableBuilder
     private static bool|string $defaultGlobalSearch = false;
 
     private static array $defaultQueryBuilderConfig = [];
+
     private static array $customQueryBuilderConfig = [];
 
     public function __construct(private string $name = 'default')
@@ -65,7 +71,7 @@ abstract class TableBuilder
     /**
      * Set a default for global search.
      *
-     * @param bool|string $label
+     * @param  bool|string  $label
      * @return void
      */
     public static function defaultGlobalSearch(bool|string $label = 'Search...'): void
@@ -76,8 +82,8 @@ abstract class TableBuilder
     /**
      * Retrieve a query string item from the request.
      *
-     * @param string $key
-     * @param mixed|null $default
+     * @param  string  $key
+     * @param  mixed|null  $default
      * @return mixed
      */
     private function query(string $key, mixed $default = null): mixed
@@ -92,7 +98,7 @@ abstract class TableBuilder
     /**
      * Helper method to update the Spatie Query Builder parameter config.
      *
-     * @param string $name
+     * @param  string  $name
      * @return void
      */
     public static function updateQueryBuilderParameters(string $name): void
@@ -111,7 +117,7 @@ abstract class TableBuilder
     /**
      * Name for this table.
      *
-     * @param string $name
+     * @param  string  $name
      * @return self
      */
     public function name(string $name): self
@@ -125,7 +131,7 @@ abstract class TableBuilder
     /**
      * PageName for this table.
      *
-     * @param string $pageName
+     * @param  string  $pageName
      * @return self
      */
     public function pageName(string $pageName): self
@@ -138,7 +144,7 @@ abstract class TableBuilder
     /**
      * PerPage options for this table.
      *
-     * @param array $pageLength
+     * @param  array  $pageLength
      * @return self
      */
     public function pageLength(array $pageLength): self
@@ -151,7 +157,7 @@ abstract class TableBuilder
     /**
      * Default sort for this table.
      *
-     * @param string $defaultSort
+     * @param  string  $defaultSort
      * @return self
      */
     public function defaultSort(string $defaultSort): self
@@ -195,7 +201,7 @@ abstract class TableBuilder
 
             'filters' => $this->transformFilters(),
             'hasFilters' => $this->filters->isNotEmpty(),
-            'isFiltered' => !!$this->filters->search(fn($filter) => $filter->value),
+            'isFiltered' => (bool) $this->filters->search(fn ($filter) => $filter->value),
 
             'searchFields' => $this->transformsearchFields(),
 
@@ -222,8 +228,8 @@ abstract class TableBuilder
         return $this->columns->map(function (Column $column) use ($columns, $sort) {
             $key = $column->key;
 
-            if (!empty($columns)) {
-                $column->hidden = !in_array($key, $columns);
+            if (! empty($columns)) {
+                $column->hidden = ! in_array($key, $columns);
             }
 
             if ($sort === $key) {
@@ -283,12 +289,12 @@ abstract class TableBuilder
     /**
      * Add a column to the query builder.
      *
-     * @param string|null $key
-     * @param string|null $label
-     * @param bool $canBeHidden
-     * @param bool $hidden
-     * @param bool $sortable
-     * @param bool $searchable
+     * @param  string|null  $key
+     * @param  string|null  $label
+     * @param  bool  $canBeHidden
+     * @param  bool  $hidden
+     * @param  bool  $sortable
+     * @param  bool  $searchable
      * @return self
      */
     public function column(string $key = null, string $label = null, bool $canBeHidden = true, bool $hidden = false, bool $sortable = false, bool $searchable = false): self
@@ -315,7 +321,7 @@ abstract class TableBuilder
     /**
      * Helper method to add a global search input.
      *
-     * @param string|null $label
+     * @param  string|null  $label
      * @return self
      */
     public function withGlobalSearch(string $label = null): self
@@ -326,9 +332,9 @@ abstract class TableBuilder
     /**
      * Add a search input to query builder.
      *
-     * @param string $key
-     * @param string|null $label
-     * @param string|null $defaultValue
+     * @param  string  $key
+     * @param  string|null  $label
+     * @param  string|null  $defaultValue
      * @return self
      */
     public function searchField(string $key, string $label = null, string $defaultValue = null): self
@@ -341,12 +347,12 @@ abstract class TableBuilder
     /**
      * Add a select filter to the query builder.
      *
-     * @param string $key
-     * @param array $options
-     * @param string|null $label
-     * @param string|null $defaultValue
-     * @param bool $noFilterOption
-     * @param string|null $noFilterOptionLabel
+     * @param  string  $key
+     * @param  array  $options
+     * @param  string|null  $label
+     * @param  string|null  $defaultValue
+     * @param  bool  $noFilterOption
+     * @param  string|null  $noFilterOptionLabel
      * @return self
      */
     public function selectFilter(string $key, array $options, string $label = null, string $defaultValue = null, bool $noFilterOption = true, string $noFilterOptionLabel = null): self
@@ -367,7 +373,7 @@ abstract class TableBuilder
     /**
      * Add multiple columns to the query builder.
      *
-     * @param array $columns
+     * @param  array  $columns
      * @return $this
      */
     public function columns(array $columns = []): self
@@ -398,6 +404,7 @@ abstract class TableBuilder
                 ->through(function ($model, $key) {
                     $data = Arr::dot($model->toArray());
                     $data['created_at'] = $model->created_at->format('d-M-Y');
+
                     return $data;
                 })
                 ->withQueryString(),
@@ -423,6 +430,7 @@ abstract class TableBuilder
             if ($key !== 'global') {
                 return $key;
             }
+
             return $this->globalSearch();
         })->values()->toArray();
     }
@@ -473,7 +481,7 @@ abstract class TableBuilder
     /**
      * Give the query builder props to the given Inertia response.
      *
-     * @param \Inertia\Response $response
+     * @param  \Inertia\Response  $response
      * @return \Inertia\Response
      */
     public function render(Response $response): Response

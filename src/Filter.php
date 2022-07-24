@@ -19,7 +19,7 @@ class Filter implements Arrayable
     ) {
     }
 
-    #[ArrayShape(['key' => "string", 'label' => "string", 'options' => "array", 'value' => "null|string", 'type' => "string"])]
+    #[ArrayShape(['key' => 'string', 'label' => 'string', 'options' => 'array', 'value' => 'null|string', 'type' => 'string'])]
     public function toArray(): array
     {
         $options = $this->options;
@@ -29,11 +29,11 @@ class Filter implements Arrayable
         }
 
         return [
-            'key'     => $this->key,
-            'label'   => $this->label,
+            'key' => $this->key,
+            'label' => $this->label,
             'options' => $options,
-            'value'   => $this->value,
-            'type'    => $this->type,
+            'value' => $this->value,
+            'type' => $this->type,
         ];
     }
 }

@@ -20,10 +20,10 @@ class SelectFilter implements Arrayable
     public function toArray(): array
     {
         return [
-            'key'     => $this->key,
-            'label'   => $this->label,
+            'key' => $this->key,
+            'label' => $this->label,
             'options' => $this->options,
-            'value'   => $this->value,
+            'value' => $this->value,
         ];
     }
 }

@@ -2,10 +2,10 @@
 
 namespace Hotash\InertiaTable;
 
+use Hotash\InertiaTable\Traits\HasTableBuilder;
 use Hotash\InertiaTable\Utils\Column;
 use Hotash\InertiaTable\Utils\SearchFilter;
 use Hotash\InertiaTable\Utils\SelectFilter;
-use Hotash\InertiaTable\Traits\HasTableBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Inertia\Response;
@@ -60,7 +60,7 @@ class InertiaTable
     /**
      * Set a default for global search.
      *
-     * @param bool|string $label
+     * @param  bool|string  $label
      * @return void
      */
     public static function defaultGlobalSearch(bool|string $label = 'Search...'): void
@@ -71,7 +71,7 @@ class InertiaTable
     /**
      * Helper method to add a global search input.
      *
-     * @param string $label
+     * @param  string  $label
      * @return static
      */
     public function withGlobalSearch(string $label = 'Search...'): static
@@ -96,10 +96,10 @@ class InertiaTable
     /**
      * Add a search input to query builder.
      *
-     * @param string $key
-     * @param string|null $label
-     * @param string|null $value
-     * @param AllowedFilter|null $filter
+     * @param  string  $key
+     * @param  string|null  $label
+     * @param  string|null  $value
+     * @param  AllowedFilter|null  $filter
      * @return static
      */
     public function searchFilter(string $key, string $label = null, string $value = null, string|AllowedFilter $filter = null): static
@@ -112,11 +112,11 @@ class InertiaTable
     /**
      * Add a select filter to the query builder.
      *
-     * @param string $key
-     * @param array $options
-     * @param string|null $label
-     * @param bool|null $placeholder
-     * @param string|null $value
+     * @param  string  $key
+     * @param  array  $options
+     * @param  string|null  $label
+     * @param  bool|null  $placeholder
+     * @param  string|null  $value
      * @return static
      */
     public function selectFilter(string $key, array $options, string $label = null, bool $placeholder = null, string $value = null): static
@@ -147,7 +147,7 @@ class InertiaTable
     /**
      * Give the query builder props to the given Inertia response.
      *
-     * @param \Inertia\Response $response
+     * @param  \Inertia\Response  $response
      * @return \Inertia\Response
      */
     public function render(Response $response): Response
@@ -155,7 +155,7 @@ class InertiaTable
         $this->resetQueryBuilderParameters();
 
         return $response->with([
-            $this->name.'TableBuilderProps' => $this->getTableProps()
+            $this->name.'TableBuilderProps' => $this->getTableProps(),
         ]);
     }
 }

@@ -12,16 +12,15 @@ class Column implements Arrayable
     public bool $checkbox = false;
 
     public function __construct(
-        public string                  $key,
-        public string                  $label,
-        public bool|AllowedSort|null   $sortable = null,
+        public string $key,
+        public string $label,
+        public bool|AllowedSort|null $sortable = null,
         public bool|AllowedFilter|null $searchable = null,
-        public bool                    $toggleable = true,
-        public bool                    $hidden = false,
-        public bool|string             $sorted = false,
-        public ?Closure                $format = null,
-    )
-    {
+        public bool $toggleable = true,
+        public bool $hidden = false,
+        public bool|string $sorted = false,
+        public ?Closure $format = null,
+    ) {
     }
 
     public static function make(string $key, string $label): static
@@ -83,7 +82,7 @@ class Column implements Arrayable
 
     public function isSearchable(): bool
     {
-        return !!$this->searchable;
+        return (bool) $this->searchable;
     }
 
     public function searchUsing(): AllowedFilter|string
@@ -91,12 +90,13 @@ class Column implements Arrayable
         if ($this->searchable instanceof AllowedFilter) {
             return $this->searchable;
         }
+
         return $this->key;
     }
 
     public function isSortable(): bool
     {
-        return !!$this->sortable;
+        return (bool) $this->sortable;
     }
 
     public function sortUsing(): AllowedSort|string
@@ -104,6 +104,7 @@ class Column implements Arrayable
         if ($this->sortable instanceof AllowedFilter) {
             return $this->sortable;
         }
+
         return $this->key;
     }
 

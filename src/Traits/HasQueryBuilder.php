@@ -37,8 +37,8 @@ trait HasQueryBuilder
     /**
      * Retrieve a query string item from the request.
      *
-     * @param string $key
-     * @param mixed|null $default
+     * @param  string  $key
+     * @param  mixed|null  $default
      * @return mixed
      */
     private function query(string $key, mixed $default = null): mixed
@@ -107,5 +107,4 @@ trait HasQueryBuilder
 
         config(['query-builder.parameters' => $this->getQueryBuilderParameters()]);
     }
-
 }
